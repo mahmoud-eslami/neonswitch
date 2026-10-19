@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeonSwitch — ⌘Tab, rewired</title>
+<meta name="description" content="A cyberpunk, circular, neon replacement for the macOS ⌘Tab app switcher. Free and open source.">
+<meta property="og:title" content="NeonSwitch — ⌘Tab, rewired">
+<meta property="og:description" content="A cyberpunk, circular, neon replacement for the macOS ⌘Tab app switcher.">
+<meta property="og:image" content="img/theme-green.jpg">
+<link rel="icon" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080a;
+    --panel: #0a0f12;
+    --line: #16211b;
+    --text: #d6e4dc;
+    --muted: #7d8f85;
+    --neon: #39ff14;
+    --accent: #00ffc8;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --display: "Chakra Petch", var(--mono);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.65 var(--mono);
+    overflow-x: hidden;
+  }
+  /* CRT scanlines over everything */
+  body::after {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);
+  }
+  /* Faint grid behind the page */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--neon) 6%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--neon) 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at 50% 20%, #000 20%, transparent 75%);
+  }
+  a { color: var(--neon); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  /* Top bar */
+  header.bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0; border-bottom: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); letter-spacing: .08em;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--text); font-weight: 700; }
+  .brand img { width: 28px; height: 28px; }
+  .bar nav { display: flex; gap: 22px; }
+  .bar nav a { color: var(--muted); }
+  .bar nav a:hover { color: var(--neon); text-decoration: none; }
+
+  /* Hero */
+  .hero {
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center;
+    padding: 72px 0 56px;
+  }
+  .tag {
+    display: inline-block; font-size: 12px; letter-spacing: .14em; color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    padding: 4px 10px; margin-bottom: 22px;
+  }
+  .tag .blink { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  h1 {
+    font-family: var(--display); font-weight: 700; margin: 0 0 18px;
+    font-size: clamp(44px, 7vw, 84px); line-height: .95; letter-spacing: .01em;
+    color: var(--neon);
+    text-shadow: 0 0 6px var(--neon), 0 0 24px color-mix(in srgb, var(--neon) 60%, transparent);
+    position: relative;
+  }
+  h1 .sub { display: block; color: var(--text); text-shadow: none; font-size: .5em; margin-top: 10px; }
+  /* Glitch layers on the title */
+  .glitch { position: relative; display: inline-block; }
+  .glitch::before, .glitch::after {
+    content: attr(data-text); position: absolute; inset: 0; opacity: 0;
+  }
+  .glitch::before { color: #ff2bd6; animation: glitch 4s infinite; }
+  .glitch::after { color: var(--accent); animation: glitch 4s infinite reverse; }
+  @keyframes glitch {
+    0%, 91%, 100% { opacity: 0; transform: none; }
+    92% { opacity: .8; transform: translate(-3px, 1px); clip-path: inset(10% 0 55% 0); }
+    94% { opacity: .8; transform: translate(3px, -1px); clip-path: inset(60% 0 8% 0); }
+    96% { opacity: .8; transform: translate(-2px, 0); clip-path: inset(30% 0 40% 0); }
+  }
+  .lede { color: var(--muted); font-size: 16px; max-width: 520px; margin: 0 0 32px; }
+  .lede b { color: var(--text); font-weight: 500; }
+  .cta { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    font: 700 14px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+    padding: 16px 22px; border: 1.5px solid var(--neon); color: var(--neon); background: transparent;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: background .15s, color .15s, box-shadow .15s;
+  }
+  .btn:hover { text-decoration: none; }
+  .btn.primary { background: var(--neon); color: #021003; box-shadow: 0 0 28px color-mix(in srgb, var(--neon) 55%, transparent); }
+  .btn.primary:hover { background: color-mix(in srgb, var(--neon) 85%, white); }
+  .btn.ghost:hover { background: color-mix(in srgb, var(--neon) 12%, transparent); }
+  .meta { font-size: 12px; color: var(--muted); margin-top: 16px; }
+
+  .stage { position: relative; aspect-ratio: 1; }
+  .stage::before {
+    content: ""; position: absolute; inset: 6%; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--neon) 22%, transparent), transparent 70%);
+    filter: blur(30px);
+  }
+  .stage img {
+    position: relative; width: 100%; height: 100%; object-fit: contain; border-radius: 50%;
+    -webkit-mask-image: radial-gradient(circle, #000 66%, transparent 71%);
+            mask-image: radial-gradient(circle, #000 66%, transparent 71%);
+    transition: opacity .25s;
+  }
+  .stage img.fading { opacity: 0; }
+
+  /* Section framing */
+  section { padding: 64px 0; border-top: 1px solid var(--line); }
+  .kicker { font-size: 12px; letter-spacing: .16em; color: var(--accent); margin: 0 0 8px; }
+  h2 { font-family: var(--display); font-size: clamp(28px, 4vw, 40px); margin: 0 0 28px; color: var(--text); line-height: 1.1; }
+
+  /* Themes */
+  .themes { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    font: 500 13px var(--mono); color: var(--text); background: var(--panel);
+    border: 1px solid var(--line); padding: 10px 14px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .chip i { width: 14px; height: 14px; border-radius: 50%; display: inline-block;
+            background: linear-gradient(90deg, var(--a) 50%, var(--b) 50%); }
+  .chip[aria-pressed="true"] { border-color: var(--neon); color: var(--neon); box-shadow: 0 0 14px color-mix(in srgb, var(--neon) 35%, transparent) inset; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 16px; }
+
+  /* Feature grid */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .feature { background: var(--bg); padding: 26px 24px; }
+  .feature h3 { font-family: var(--display); font-size: 18px; margin: 0 0 8px; color: var(--neon); }
+  .feature p { margin: 0; color: var(--muted); font-size: 14px; }
+  .feature .n { font-size: 11px; color: var(--accent); letter-spacing: .12em; }
+
+  /* Install */
+  .steps { counter-reset: s; display: grid; gap: 14px; padding: 0; margin: 0; list-style: none; max-width: 760px; }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: start; }
+  .steps li::before {
+    content: counter(s, decimal-leading-zero); font: 700 20px var(--display); color: var(--neon);
+    border: 1px solid var(--line); padding: 8px 0; text-align: center;
+  }
+  .steps li > div, .hero > div { min-width: 0; }
+  .steps b { color: var(--text); font-weight: 500; }
+  .steps p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  code { font-family: var(--mono); font-size: 13px; color: var(--accent); background: var(--panel); border: 1px solid var(--line); padding: 1px 6px; }
+  pre { margin: 10px 0 0; background: var(--panel); border: 1px solid var(--line); padding: 12px 14px; overflow-x: auto; }
+  pre code { border: 0; padding: 0; background: none; }
+
+  /* Keys */
+  table.keys { width: 100%; max-width: 760px; border-collapse: collapse; font-size: 14px; }
+  .keys td { padding: 11px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .keys td:first-child { width: 38%; color: var(--neon); white-space: nowrap; padding-right: 16px; }
+  .keys td:last-child { color: var(--muted); }
+  kbd { font: 600 12px var(--mono); border: 1px solid color-mix(in srgb, var(--neon) 50%, transparent); padding: 2px 7px; color: var(--neon); }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0 48px; color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; padding-top: 44px; }
+    .stage { max-width: 460px; width: 100%; margin: 0 auto; order: -1; }
+    .features { grid-template-columns: 1fr; }
+    .bar nav { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<div class="wrap">
+  <header class="bar">
+    <a class="brand" href="#"><img src="img/icon.png" alt="">NEONSWITCH</a>
+    <nav>
+      <a href="#themes">THEMES</a>
+      <a href="#features">FEATURES</a>
+      <a href="#install">INSTALL</a>
+      <a href="https://github.com/mahmoud-eslami/neonswitch">GITHUB</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <span class="tag">SYS::ONLINE // macOS APP SWITCHER<span class="blink">_</span></span>
+      <h1><span class="glitch" data-text="NEONSWITCH">NEONSWITCH</span><span class="sub">⌘Tab, rewired.</span></h1>
+      <p class="lede">
+        A <b>circular, cyberpunk</b> replacement for the macOS app switcher.
+        Your apps orbit a glowing neon ring: hold <kbd>⌘</kbd>, tap <kbd>Tab</kbd>, let go to jack in.
+      </p>
+      <div class="cta">
+        <a class="btn primary" href="https://github.com/mahmoud-eslami/neonswitch/releases/latest/download/NeonSwitch.dmg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
+          Download .dmg
+        </a>
+        <a class="btn ghost" href="https://github.com/mahmoud-eslami/neonswitch">View source</a>
+      </div>
+      <p class="meta">Free &amp; open source · macOS 14 Sonoma or later · Apple Silicon &amp; Intel</p>
+    </div>
+    <div class="stage">
+      <img id="hero-shot" src="img/theme-green.jpg" alt="NeonSwitch circular app switcher with the Toxic Green theme" width="1050" height="1050">
+    </div>
+  </div>
+</div>
+
+<section id="themes">
+  <div class="wrap">
+    <p class="kicker">// 09 PRESETS</p>
+    <h2>Pick your city at night.</h2>
+    <div class="themes" role="group" aria-label="Preview a theme">
+      <button class="chip" aria-pressed="true"  data-shot="green"   data-a="#39ff14" data-b="#00ffc8"><i style="--a:#39ff14;--b:#00ffc8"></i>Toxic Green</button>
+      <button class="chip" aria-pressed="false" data-shot="matrix"  data-a="#00ff41" data-b="#00c853"><i style="--a:#00ff41;--b:#008f11"></i>Matrix</button>
+      <button class="chip" aria-pressed="false" data-shot="cyan"    data-a="#00f0ff" data-b="#ff9e00"><i style="--a:#00f0ff;--b:#ff9e00"></i>Tron Grid</button>
+      <button class="chip" aria-pressed="false" data-shot="magenta" data-a="#ff2bd6" data-b="#00e5ff"><i style="--a:#ff2bd6;--b:#00e5ff"></i>Synthwave</button>
+      <button class="chip" aria-pressed="false" data-shot="amber"   data-a="#ffb000" data-b="#ff4d00"><i style="--a:#ffb000;--b:#ff4d00"></i>Blade Runner</button>
+      <button class="chip" aria-pressed="false" data-shot="purple"  data-a="#b052ff" data-b="#ff4fd8"><i style="--a:#b052ff;--b:#ff4fd8"></i>Ultraviolet</button>
+    </div>
+    <p class="note">Plus Vaporwave, Akira and Arctic Ghost in the app. Each theme has its own animated backdrop: radar grid, digital rain, hex cells or an outrun horizon.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <p class="kicker">// SPEC SHEET</p>
+    <h2>Built to replace ⌘Tab, not sit next to it.</h2>
+    <div class="features">
+      <div class="feature"><span class="n">01</span><h3>Drop-in ⌘Tab</h3><p>Takes over the real shortcut. A quick tap switches instantly, just like the native switcher. Toggle it off from the menu bar any time.</p></div>
+      <div class="feature"><span class="n">02</span><h3>Orbital layout</h3><p>Apps sit on a ring in most-recently-used order. The selection keeps rotating forward past the start instead of snapping back.</p></div>
+      <div class="feature"><span class="n">03</span><h3>Mouse aware</h3><p>Point at any slice of the ring to select, click to switch, scroll to rotate. Optional sticky mode keeps it open after you let go of ⌘.</p></div>
+      <div class="feature"><span class="n">04</span><h3>Nine themes</h3><p>Two-tone palettes, animated backdrops and per-theme HUD taglines. Glitch text, scanlines and ring animations can each be turned off.</p></div>
+      <div class="feature"><span class="n">05</span><h3>App control</h3><p>Press <kbd>Q</kbd> to quit or <kbd>H</kbd> to hide the selected app without leaving the switcher. Minimized windows come back when you switch.</p></div>
+      <div class="feature"><span class="n">06</span><h3>Tiny &amp; native</h3><p>Pure Swift + SwiftUI, a ~2&nbsp;MB download, no Dock icon. Lives in your menu bar with launch-at-login built in.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <p class="kicker">// BOOT SEQUENCE</p>
+    <h2>Install in a minute.</h2>
+    <ol class="steps">
+      <li><div><b>Download and open the DMG</b>, then drag NeonSwitch into Applications.</div></li>
+      <li><div><b>Open NeonSwitch.</b> It isn't signed with an Apple Developer ID, so macOS blocks the first launch.
+        <p>Go to System Settings → Privacy &amp; Security and click <b>Open Anyway</b>. Or run this once in Terminal:</p>
+        <pre><code>xattr -dr com.apple.quarantine /Applications/NeonSwitch.app</code></pre></div></li>
+      <li><div><b>Grant Accessibility access</b> when asked (System Settings → Privacy &amp; Security → Accessibility).
+        <p>NeonSwitch needs it to catch ⌘Tab and bring apps to the front. It doesn't log or send anything.</p></div></li>
+      <li><div><b>Press ⌘Tab.</b> Use the menu bar icon to change themes, size and effects, or turn on Launch at Login.</div></li>
+    </ol>
+  </div>
+</section>
+
+<section id="keys">
+  <div class="wrap">
+    <p class="kicker">// CONTROLS</p>
+    <h2>Keys &amp; mouse.</h2>
+    <table class="keys">
+      <tr><td><kbd>⌘</kbd> <kbd>Tab</kbd> / <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>Tab</kbd></td><td>Cycle forward / back. Release ⌘ to switch.</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>Move the selection.</td></tr>
+      <tr><td><kbd>Return</kbd> / <kbd>Esc</kbd></td><td>Switch now / cancel.</td></tr>
+      <tr><td><kbd>Q</kbd> / <kbd>H</kbd></td><td>Quit / hide the selected app.</td></tr>
+      <tr><td>Hover · Click · Scroll</td><td>Select · switch · rotate the ring. Click outside to cancel.</td></tr>
+    </table>
+  </div>
+</section>
+
+<div class="wrap">
+  <footer>
+    <span>NEONSWITCH · open source on <a href="https://github.com/mahmoud-eslami/neonswitch">GitHub</a></span>
+    <span>Not affiliated with Apple. ⌘ is a key, not a logo.</span>
+  </footer>
+</div>
+
+<script>
+  // Theme chips: swap the hero screenshot and recolor the page.
+  const shot = document.getElementById('hero-shot');
+  const chips = document.querySelectorAll('.chip');
+  const root = document.documentElement.style;
+  chips.forEach(chip => chip.addEventListener('click', () => {
+    chips.forEach(c => c.setAttribute('aria-pressed', c === chip));
+    root.setProperty('--neon', chip.dataset.a);
+    root.setProperty('--accent', chip.dataset.b);
+    shot.classList.add('fading');
+    const next = new Image();
+    next.onload = () => { shot.src = next.src; shot.alt = `NeonSwitch with the ${chip.textContent.trim()} theme`; shot.classList.remove('fading'); };
+    next.src = `img/theme-${chip.dataset.shot}.jpg`;
+    if (chip.closest('#themes') && window.innerWidth <= 860) shot.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }));
+  // Preload theme shots after first paint
+  addEventListener('load', () => chips.forEach(c => { new Image().src = `img/theme-${c.dataset.shot}.jpg`; }));
+</script>
+</body>
+</html>
